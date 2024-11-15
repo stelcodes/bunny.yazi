@@ -98,9 +98,6 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   return { tag = tag, path = path }
 end
 
-local mark = function(notify)
-end
-
 local hop = function(hops, fuzzy_cmd, notify)
   local cands = {}
   for _, item in pairs(create_special_hops()) do
@@ -177,7 +174,7 @@ return {
     end)
     state.hops = hops
   end,
-  entry = function(_self, args)
+  entry = function()
     local init_error = get_state("init_error")
     if init_error then
       fail(init_error)
