@@ -81,7 +81,7 @@ local select_key = function(hops)
     table.insert(cands, { desc = item.tag, on = item.key, path = item.path })
   end
   if #cands == 0 then
-    info("Empty hops table")
+    fail("Empty hops table")
     return nil
   end
   local idx = ya.which { cands = cands }
