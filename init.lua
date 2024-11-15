@@ -49,7 +49,8 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   local child, err =
       Command(fuzzy_cmd):stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
   if not child then
-    return fail("Spawn `%s` failed with error code %s. Do you have it installed?", fuzzy_cmd, err)
+    fail("Spawn `%s` failed with error code %s. Do you have it installed?", fuzzy_cmd, err)
+    return
   end
   -- Build fzf input string
   local input_lines = {};
@@ -61,17 +62,17 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   child:flush()
   local output, err = child:wait_with_output()
   if not output then
-    return fail("Cannot read `%s` output, error code %s", fuzzy_cmd, err)
+    fail("Cannot read `%s` output, error code %s", fuzzy_cmd, err)
+    return
   elseif not output.status.success and output.status.code ~= 130 then
-    return fail("`%s` exited with error code %s", fuzzy_cmd, output.status.code)
-  end
-  -- Remove trailing newline
-  local target = output.stdout:gsub("\n$", "")
-  if not target or target == "" then
-    return nil
+    fail("`%s` exited with error code %s", fuzzy_cmd, output.status.code)
+    return
   end
   -- Parse fzf output
-  local tag, path = string.match(target, "(.-)\t(.-)\t.*")
+  local tag, path = string.match(target, "(.-)\t(.-)")
+  if not tag or not path or path == "" then
+    return
+  end
   return { tag = tag, path = path }
 end
 
@@ -82,24 +83,22 @@ local select_key = function(hops)
   end
   if #cands == 0 then
     fail("Empty hops table")
-    return nil
+    return
   end
   local idx = ya.which { cands = cands }
   if idx == nil then
-    return nil
+    return
   end
   local selection = cands[idx]
   return { tag = selection.desc, path = selection.path }
 end
 
 local hop = function(selected_hop, notify)
-  if not selected_hop or not selected_hop.path then
-    fail("Hop failed")
-    return
-  end
-  ya.manager_emit("cd", { selected_hop.path })
-  if notify then
-    info('Hopped to "' .. selected_hop.tag .. '"')
+  if selected_hop and selected_hop.path then
+    ya.manager_emit("cd", { selected_hop.path })
+    if notify then
+      info('Hopped to "' .. selected_hop.tag .. '"')
+    end
   end
 end
 
