@@ -14,11 +14,17 @@ local get_cwd = ya.sync(function(state)
   return tostring(cx.active.current.cwd)
 end)
 
-local add_mark_to_hops = function(hops)
-  local mark = get_state("mark")
-  if mark and mark ~= "" then
-    table.insert(hops, { key = "<space>", tag = "marked", path = mark, })
+local create_special_hops = function()
+  local hops = {}
+  table.insert(hops, { key = "<backspace>", tag = "fuzzy search", path = "__FUZZY__" })
+  table.insert(hops, { key = "<enter>", tag = "create mark", path = "__MARK__" })
+  local mark_state = get_state("mark")
+  local mark_path = "__NOOP__";
+  if mark_state and mark_state ~= "" then
+    mark_path = mark_state
   end
+  table.insert(hops, { key = "<space>", tag = "hop to mark", path = mark_path, })
+  return hops
 end
 
 local validate_options = function(options)
@@ -85,49 +91,59 @@ local select_fuzzy = function(hops, fuzzy_cmd)
     return
   end
   -- Parse fzf output
-  local tag, path = string.match(target, "(.-)\t(.-)")
+  local tag, path = string.match(output.stdout, "(.-)\t(.-)")
   if not tag or not path or path == "" then
     return
   end
   return { tag = tag, path = path }
 end
 
-local select_key = function(hops)
+local mark = function(notify)
+end
+
+local hop = function(hops, fuzzy_cmd, notify)
   local cands = {}
-  for _, item in pairs(hops) do
+  for _, item in pairs(create_special_hops()) do
     table.insert(cands, { desc = item.tag, on = item.key, path = item.path })
   end
-  if #cands == 0 then
-    fail("Empty hops table")
-    return
+  for _, item in pairs(hops) do
+    table.insert(cands, { desc = item.tag, on = item.key, path = item.path })
   end
   local idx = ya.which { cands = cands }
   if idx == nil then
     return
   end
   local selection = cands[idx]
-  return { tag = selection.desc, path = selection.path }
-end
-
-local mark = function(notify)
-  local cwd = get_cwd()
-  if cwd then
-    set_state("mark", cwd)
-    if notify then
-      info("Marked current dir")
+  local selected_hop = { tag = selection.desc, path = selection.path }
+  -- Handle special hops
+  if selected_hop.path == "__MARK__" then
+    local cwd = get_cwd()
+    if cwd then
+      set_state("mark", cwd)
+      if notify then
+        info("Marked current directory")
+      end
+    else
+      fail("Failed to set mark")
     end
-  else
-    fail("Failed to set mark")
+    return
+  elseif selected_hop.path == "__NOOP__" then
+    if notify then
+      info("No marked directory")
+    end
+    return
+  elseif selected_hop.path == "__FUZZY__" then
+    local fuzzy_hop = select_fuzzy(hops, fuzzy_cmd)
+    if fuzzy_hop then
+      selected_hop = fuzzy_hop
+    else
+      return
+    end
   end
-end
-
-local hop = function(selected_hop, notify)
-  if selected_hop and selected_hop.path then
-    ya.manager_emit("cd", { selected_hop.path })
-    -- TODO: Better way to verify hop was successful?
-    if notify then
-      info('Hopped to "' .. selected_hop.tag .. '"')
-    end
+  ya.manager_emit("cd", { selected_hop.path })
+  -- TODO: Better way to verify hop was successful?
+  if notify then
+    info('Hopped to "' .. selected_hop.tag .. '"')
   end
 end
 
@@ -159,20 +175,7 @@ return {
       fail(init_error)
       return
     end
-    local fuzzy_cmd, hops, notify = get_state("fuzzy_cmd"), get_state("hops"), get_state("notify")
-    add_mark_to_hops(hops)
-    local cmd = args[1]
-    if not cmd or cmd == "" then
-      cmd = "hop"
-    end
-    if cmd == "hop" then
-      hop(select_key(hops), notify)
-    elseif cmd == "hop_fuzzy" then
-      hop(select_fuzzy(hops, fuzzy_cmd), notify)
-    elseif cmd == "mark" then
-      mark(notify)
-    else
-      fail("Unrecognized command \"" .. cmd .. "\" ")
-    end
+    local hops, fuzzy_cmd, notify = get_state("hops"), get_state("fuzzy_cmd"), get_state("notify")
+    hop(hops, fuzzy_cmd, notify)
   end,
 }
