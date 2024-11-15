@@ -4,9 +4,13 @@
 
 This is an intentionally simple directory bookmark plugin for [yazi](https://github.com/sxyazi/yazi).
 
-- Define static bookmarks (aka **hops**) in lua
-- Go to directory via key or fuzzy search with [fzf](https://github.com/junegunn/fzf) or any other compatible program
-- Absolutely no filesystem writes!
+- Define bookmarks (aka **hops**) in lua
+- Change directory via key or fuzzy search with [fzf](https://github.com/junegunn/fzf) or any other compatible program
+- Mark a directory (one at a time) for hopping quickly
+- Single menu for all functionality, therefore only one keymap is required
+- Absolutely no filesystem writes
+
+<img src="https://i.imgur.com/3a47LI8.png" alt="bunny.yazi menu"/>
 
 ## Installation
 
@@ -35,6 +39,9 @@ programs.yazi = {
   initLua = ''
     require("bunny"):setup({ ... })
   '';
+  keymap.manager.prepend_keymap = [
+    { on = "'"; run = "plugin bunny"; desc = "Start bunny.yazi"; }
+  ];
 };
 ```
 
@@ -63,14 +70,9 @@ require("bunny"):setup({
 `~/.config/yazi/yazi.toml`:
 ```toml
 [[manager.prepend_keymap]]
-desc = "Hop to directory via key"
+desc = "Start bunny.yazi""
 on = "'"
-run = "plugin bunny --args=key" # `plugin bunny` also works
-
-[[manager.prepend_keymap]]
-desc = "Hop to directory via fuzzy search"
-on = "\""
-run = "plugin bunny --args=fuzzy"
+run = "plugin bunny"
 ```
 
 ## Inspiration
