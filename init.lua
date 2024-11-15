@@ -143,7 +143,11 @@ local hop = function(hops, fuzzy_cmd, notify)
   ya.manager_emit("cd", { selected_hop.path })
   -- TODO: Better way to verify hop was successful?
   if notify then
-    info('Hopped to "' .. selected_hop.tag .. '"')
+    local tag = selected_hop.tag
+    if tag == "hop to mark" then
+      tag = "mark"
+    end
+    info('Hopped to ' .. tag)
   end
 end
 
