@@ -133,6 +133,10 @@ local hop = function(hops, fuzzy_cmd, notify)
     end
     return
   elseif selected_hop.path == "__FUZZY__" then
+    local mark_state = get_state("mark")
+    if mark_state and mark_state ~= "" then
+      table.insert(hops, { key = "", tag = "marked", path = mark_state, })
+    end
     local fuzzy_hop = select_fuzzy(hops, fuzzy_cmd)
     if fuzzy_hop then
       selected_hop = fuzzy_hop

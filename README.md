@@ -8,7 +8,7 @@ This is an intentionally simple directory bookmark plugin for [yazi](https://git
 - Change directory via key or fuzzy search with [fzf](https://github.com/junegunn/fzf) or any other compatible program
 - Mark a directory (one at a time) for hopping quickly
 - Single menu for all functionality, therefore only one keymap is required
-- Absolutely no filesystem writes
+- No filesystem changes whatsoever
 
 <img src="https://i.imgur.com/3a47LI8.png" alt="bunny.yazi menu"/>
 
