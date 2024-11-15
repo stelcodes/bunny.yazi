@@ -70,7 +70,7 @@ require("bunny"):setup({
 `~/.config/yazi/yazi.toml`:
 ```toml
 [[manager.prepend_keymap]]
-desc = "Start bunny.yazi""
+desc = "Start bunny.yazi"
 on = "'"
 run = "plugin bunny"
 ```
