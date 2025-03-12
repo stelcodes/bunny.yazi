@@ -1,0 +1,6 @@
+#!/bin/bash
+#/* vim: set filetype=bash : */
+
+env "YAZI_CONFIG_HOME=$(pwd)" "YAZI_LOG=debug" yazi "$@"
+
+bat ~/.local/state/yazi/yazi.log || cat ~/.local/state/yazi/yazi.log

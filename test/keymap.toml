@@ -1,0 +1,4 @@
+[[manager.prepend_keymap]]
+desc = "Start bunny.yazi"
+on = "'"
+run = "plugin bunny"
