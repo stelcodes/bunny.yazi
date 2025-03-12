@@ -6,6 +6,8 @@ local function debug(...)
         str = str .. "[" .. tostring(k) .. "] = " .. toReadableString(v) .. ", "
       end
       return str:sub(1, -3) .. " }"
+    elseif type(val) == "Url" then
+      return "Url:"..tostring(val)
     else
       return tostring(val)
     end
@@ -29,7 +31,7 @@ local set_state = ya.sync(function(state, attr, value)
 end)
 
 local get_cwd = ya.sync(function(state)
-  return cx.active.current.cwd
+  return tostring(cx.active.current.cwd) -- Url objects are evil >.<"
 end)
 
 local get_tab = ya.sync(function(state)
