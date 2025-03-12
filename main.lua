@@ -29,20 +29,28 @@ local set_state = ya.sync(function(state, attr, value)
 end)
 
 local get_cwd = ya.sync(function(state)
-  -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/zoxide.lua
-  return tostring(cx.active.current.cwd)
+  return cx.active.current.cwd
 end)
+
+local get_tab = ya.sync(function(state)
+  return cx.tabs.idx
+end)
+
 
 local create_special_hops = function()
   local hops = {}
   table.insert(hops, { key = "<backspace>", tag = "fuzzy search", path = "__FUZZY__" })
   table.insert(hops, { key = "<enter>", tag = "create mark", path = "__MARK__" })
   local mark_state = get_state("mark")
-  local mark_path = "__NOOP__";
   if mark_state and mark_state ~= "" then
-    mark_path = mark_state
+    table.insert(hops, { key = "<space>", tag = mark_state, path = mark_state, })
   end
-  table.insert(hops, { key = "<space>", tag = "hop to mark", path = mark_path, })
+  local tabhist = get_state("tabhist")
+  local tab = get_tab()
+  if tabhist[tab] and tabhist[tab][2] then
+    local previous_dir = tabhist[tab][2]
+    table.insert(hops, { key = "-", tag = previous_dir, path = previous_dir, })
+  end
   return hops
 end
 
@@ -161,7 +169,7 @@ local hop = function(hops, fuzzy_cmd, notify)
       return
     end
   end
-  ya.manager_emit("cd", { selected_hop.path })
+  ya.mgr_emit("cd", { selected_hop.path })
   -- TODO: Better way to verify hop was successful?
   if notify then
     local tag = selected_hop.tag
@@ -193,6 +201,22 @@ return {
       end
     end)
     state.hops = hops
+    ps.sub("cd", function(body)
+      -- Note: This event is triggered at startup!
+      local tab = body.tab -- type number
+      local cwd = tostring(cx.active.current.cwd)
+      -- Upon startup this will be nil so initialize if necessary
+      local tabhist = get_state("tabhist") or {}
+      -- tabhist structure:{ <tab_index> = { <current_dir>, <previous_dir?> }, ... }
+      if not tabhist[tab] then
+        -- If fresh tab, initialize tab history table
+        tabhist[tab] = { cwd }
+      else
+        -- Otherwise, shift history table to the right and add cwd to the front
+        tabhist[tab] = { cwd, tabhist[tab][1] }
+      end
+      set_state("tabhist", tabhist)
+    end)
   end,
   entry = function()
     local init_error = get_state("init_error")
