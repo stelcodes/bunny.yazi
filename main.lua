@@ -202,11 +202,14 @@ return {
     end)
     state.hops = hops
     ps.sub("cd", function(body)
-      -- Note: This event is triggered at startup!
+      -- Note: This callback is sync and triggered at startup!
       local tab = body.tab -- type number
+      -- Very important to turn this into a string because Url has ownership issues
+      -- when passed to standard utility functions >.<'
+      -- https://github.com/sxyazi/yazi/issues/2159
       local cwd = tostring(cx.active.current.cwd)
       -- Upon startup this will be nil so initialize if necessary
-      local tabhist = get_state("tabhist") or {}
+      local tabhist = state.tabhist or {}
       -- tabhist structure:{ <tab_index> = { <current_dir>, <previous_dir?> }, ... }
       if not tabhist[tab] then
         -- If fresh tab, initialize tab history table
@@ -215,7 +218,7 @@ return {
         -- Otherwise, shift history table to the right and add cwd to the front
         tabhist[tab] = { cwd, tabhist[tab][1] }
       end
-      set_state("tabhist", tabhist)
+      state.tabhist = tabhist
     end)
   end,
   entry = function()
