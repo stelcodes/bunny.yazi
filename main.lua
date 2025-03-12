@@ -112,6 +112,7 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   -- Parse fzf output
   local tag, path = string.match(output.stdout, "(.-)\t(.-)")
   if not tag or not path or path == "" then
+    fail("Failed to parse fuzzy searcher result")
     return
   end
   return { tag = tag, path = path }
