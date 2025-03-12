@@ -38,20 +38,30 @@ local get_tab = ya.sync(function(state)
   return cx.tabs.idx
 end)
 
+local function filename(pathstr)
+  if pathstr == "/" then return pathstr end
+  local url_name = Url(pathstr):name()
+  if url_name then
+    return tostring(url_name)
+  else
+    return pathstr
+  end
+end
+
 
 local create_special_hops = function()
   local hops = {}
   table.insert(hops, { key = "<space>", tag = "fuzzy search", path = "__FUZZY__" })
   table.insert(hops, { key = "<enter>", tag = "create mark", path = "__MARK__" })
-  local mark_state = get_state("mark")
-  if mark_state and mark_state ~= "" then
-    table.insert(hops, { key = "<tab>", tag = mark_state, path = mark_state, })
+  local marked_dir = get_state("mark")
+  if marked_dir and marked_dir ~= "" then
+    table.insert(hops, { key = "<tab>", tag = filename(marked_dir), path = marked_dir, })
   end
   local tabhist = get_state("tabhist")
   local tab = get_tab()
   if tabhist[tab] and tabhist[tab][2] then
     local previous_dir = tabhist[tab][2]
-    table.insert(hops, { key = "<backspace>", tag = Url(previous_dir):name(), path = previous_dir })
+    table.insert(hops, { key = "<backspace>", tag = filename(previous_dir), path = previous_dir })
   end
   return hops
 end
