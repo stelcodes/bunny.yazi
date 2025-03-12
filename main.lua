@@ -1,3 +1,22 @@
+local function debug(...)
+  local function toReadableString(val)
+    if type(val) == "table" then
+      local str = "{ "
+      for k, v in pairs(val) do
+        str = str .. "[" .. tostring(k) .. "] = " .. toReadableString(v) .. ", "
+      end
+      return str:sub(1, -3) .. " }"
+    else
+      return tostring(val)
+    end
+  end
+  local args = { ... }
+  local processed_args = {}
+  for _, arg in pairs(args) do
+    table.insert(processed_args, toReadableString(arg))
+  end
+  ya.dbg("BUNNY.YAZI", table.unpack(processed_args))
+end
 local function fail(s, ...) ya.notify { title = "bunny.yazi", content = string.format(s, ...), timeout = 3, level = "error" } end
 local function info(s, ...) ya.notify { title = "bunny.yazi", content = string.format(s, ...), timeout = 3, level = "info" } end
 
