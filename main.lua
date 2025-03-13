@@ -34,7 +34,7 @@ local get_cwd = ya.sync(function(state)
   return tostring(cx.active.current.cwd) -- Url objects are evil >.<"
 end)
 
-local get_tab = ya.sync(function(state)
+local get_current_tab_idx = ya.sync(function(state)
   return cx.tabs.idx
 end)
 
@@ -58,7 +58,7 @@ local create_special_hops = function()
     table.insert(hops, { key = "<tab>", tag = filename(marked_dir), path = marked_dir, })
   end
   local tabhist = get_state("tabhist")
-  local tab = get_tab()
+  local tab = get_current_tab_idx()
   if tabhist[tab] and tabhist[tab][2] then
     local previous_dir = tabhist[tab][2]
     table.insert(hops, { key = "<backspace>", tag = filename(previous_dir), path = previous_dir })
