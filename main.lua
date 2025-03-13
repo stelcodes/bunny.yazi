@@ -5,9 +5,9 @@ local function debug(...)
       for k, v in pairs(val) do
         str = str .. "[" .. tostring(k) .. "] = " .. toReadableString(v) .. ", "
       end
-      return str:sub(1, -3) .. " }"
+      return str .. "}"
     elseif type(val) == "Url" then
-      return "Url:"..tostring(val)
+      return "Url:" .. tostring(val)
     else
       return tostring(val)
     end
