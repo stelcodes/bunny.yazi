@@ -38,6 +38,18 @@ local get_current_tab_idx = ya.sync(function(state)
   return cx.tabs.idx
 end)
 
+local get_tabs_as_paths = ya.sync(function(state)
+  local tabs = cx.tabs
+  local active_tab_idx = tabs.idx
+  local result = {}
+  for idx = 1, #tabs, 1 do
+    if idx ~= active_tab_idx and tabs[idx] then
+      table.insert(result, idx, tostring(tabs[idx].current.cwd))
+    end
+  end
+  return result
+end)
+
 local function filename(pathstr)
   if pathstr == "/" then return pathstr end
   local url_name = Url(pathstr):name()
@@ -62,6 +74,9 @@ local create_special_hops = function()
   if tabhist[tab] and tabhist[tab][2] then
     local previous_dir = tabhist[tab][2]
     table.insert(hops, { key = "<backspace>", tag = filename(previous_dir), path = previous_dir })
+  end
+  for idx, tab_path in pairs(get_tabs_as_paths()) do
+    table.insert(hops, { key = tostring(idx), tag = filename(tab_path), path = tab_path })
   end
   return hops
 end
