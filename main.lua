@@ -64,11 +64,6 @@ end
 local create_special_hops = function()
   local hops = {}
   table.insert(hops, { key = "<space>", tag = "fuzzy search", path = "__FUZZY__" })
-  table.insert(hops, { key = "<enter>", tag = "create mark", path = "__MARK__" })
-  local marked_dir = get_state("mark")
-  if marked_dir and marked_dir ~= "" then
-    table.insert(hops, { key = "<tab>", tag = filename(marked_dir), path = marked_dir, })
-  end
   local tabhist = get_state("tabhist")
   local tab = get_current_tab_idx()
   if tabhist[tab] and tabhist[tab][2] then
@@ -82,14 +77,14 @@ local create_special_hops = function()
 end
 
 local validate_options = function(options)
-  local hops, fuzzy_cmd, notify = options.hops, options.fuzzy_cmd, options.notify
+  local hops, fuzzy_cmd, notify, marks = options.hops, options.fuzzy_cmd, options.notify, options.marks
   -- Validate hops
   if hops ~= nil and type(hops) ~= "table" then
-    return "Invalid hops value"
+    return 'Invalid "hops" config value'
   elseif hops ~= nil then
     local used_keys = ""
     for idx, item in pairs(hops) do
-      local hop = "Hop #" .. idx .. " "
+      local hop = 'Invalid "hops" config value: #' .. idx .. " "
       if not item.key then
         return hop .. 'has missing key'
       elseif type(item.key) ~= "string" or #item.key ~= 1 then
@@ -112,9 +107,11 @@ local validate_options = function(options)
   end
   -- Validate other options
   if fuzzy_cmd ~= nil and type(fuzzy_cmd) ~= "string" then
-    return "Invalid fuzzy_cmd value"
+    return 'Invalid "fuzzy_cmd" config value'
   elseif notify ~= nil and type(notify) ~= "boolean" then
-    return "Invalid notify value"
+    return 'Invalid "notify" config value'
+  elseif marks ~= nil and type(marks) ~= "boolean" then
+    return 'Invalid "marks" config value'
   end
 end
 
