@@ -122,30 +122,28 @@ end
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/src/process/child.rs
 local select_fuzzy = function(hops, fuzzy_cmd)
   local _permit = ya.hide()
-  local child, err =
+  local child, spawn_err =
       Command(fuzzy_cmd):stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
   if not child then
-    fail("Spawn `%s` failed with error code %s. Do you have it installed?", fuzzy_cmd, err)
+    fail("Command `%s` failed with code %s. Do you have it installed?", fuzzy_cmd, spawn_err.code)
     return
   end
   -- Build fzf input string
   local input_lines = {};
   for _, item in pairs(hops) do
-    local line_elems = { item.tag, item.path, item.key }
-    table.insert(input_lines, table.concat(line_elems, "\t"))
+    table.insert(input_lines, item.tag .. "\t" .. item.path)
   end
   child:write_all(table.concat(input_lines, "\n"))
   child:flush()
-  local output, err = child:wait_with_output()
-  if not output then
-    fail("Cannot read `%s` output, error code %s", fuzzy_cmd, err)
-    return
-  elseif not output.status.success and output.status.code ~= 130 then
-    fail("`%s` exited with error code %s", fuzzy_cmd, output.status.code)
+  local output, output_err = child:wait_with_output()
+  if not output.status.success then
+    if output.status.code ~= 130 then -- user pressed escape to quit
+      fail("Command `%s` failed with code %s", fuzzy_cmd, output_err.code)
+    end
     return
   end
   -- Parse fzf output
-  local tag, path = string.match(output.stdout, "(.-)\t(.-)\t(.-)")
+  local tag, path = string.match(output.stdout, "(.-)\t(.-)\n")
   if not tag or not path or path == "" then
     fail("Failed to parse fuzzy searcher result")
     return
