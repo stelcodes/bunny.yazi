@@ -66,8 +66,8 @@ end
 
 local create_special_hops = function()
   local hops = {}
-  table.insert(hops, { key = "<Space>", desc = "Create mark", path = "__MARK__" })
-  table.insert(hops, { key = "<Enter>", desc = "Fuzzy search", path = "__FUZZY__" })
+  table.insert(hops, { key = "<Enter>", desc = "Create hop", path = "__MARK__" })
+  table.insert(hops, { key = "<Space>", desc = "Fuzzy search", path = "__FUZZY__" })
   local tabhist = get_state("tabhist")
   local tab = get_current_tab_idx()
   if tabhist[tab] and tabhist[tab][2] then
