@@ -19,8 +19,8 @@ local function debug(...)
   end
   ya.dbg("BUNNY.YAZI", table.unpack(processed_args))
 end
-local function fail(s, ...) ya.notify { title = "bunny.yazi", content = string.format(s, ...), timeout = 3, level = "error" } end
-local function info(s, ...) ya.notify { title = "bunny.yazi", content = string.format(s, ...), timeout = 3, level = "info" } end
+local function fail(s, ...) ya.notify { title = "bunny.yazi", content = string.format(s, ...), timeout = 2, level = "error" } end
+local function info(s, ...) ya.notify { title = "bunny.yazi", content = string.format(s, ...), timeout = 2, level = "info" } end
 
 local get_state = ya.sync(function(state, attr)
   return state[attr]
