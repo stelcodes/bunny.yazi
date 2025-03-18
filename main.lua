@@ -44,7 +44,7 @@ local get_tabs_as_paths = ya.sync(function(state)
   local result = {}
   for idx = 1, #tabs, 1 do
     if idx ~= active_tab_idx and tabs[idx] then
-      table.insert(result, idx, tostring(tabs[idx].current.cwd))
+      result[idx] = tostring(tabs[idx].current.cwd)
     end
   end
   return result
