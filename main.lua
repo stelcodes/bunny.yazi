@@ -64,6 +64,25 @@ local function hop_desc(hop)
   return hop.desc or hop.tag or filename(hop.path)
 end
 
+local function sort_hops(hops)
+  local function convert_key(key)
+    local t = type(key)
+    if t == "table" then
+      -- If table, sort by first key string
+      return key[1]
+    elseif t == "string" and string.lower(key) ~= key then
+      -- If uppercase letter (signifying an ephemeral hop), prepend "z"
+      -- so it gets sorted after lowercase persistent hops
+      return "z"..key
+    end
+    return key
+  end
+  table.sort(hops, function(x, y)
+    return convert_key(x.key) < convert_key(y.key)
+  end)
+  return hops
+end
+
 local create_special_hops = function()
   local hops = {}
   table.insert(hops, { key = "<Enter>", desc = "Create hop", path = "__MARK__" })
@@ -204,9 +223,8 @@ local hop = function(hops, fuzzy_cmd, notify)
     local char_idx = ya.which { cands = mark_cands, silent = true }
     if char_idx ~= nil then
       local selected_char = string.upper(mark_cands[char_idx].on)
-      debug(type(get_cwd()), get_cwd())
       table.insert(hops, { key = selected_char, path = get_cwd() })
-      set_state("hops", hops)
+      set_state("hops", sort_hops(hops))
     end
     return
   elseif selected_hop.path == "__FUZZY__" then
@@ -234,17 +252,7 @@ local function init()
   end
   set_state("fuzzy_cmd", options.fuzzy_cmd or "fzf")
   set_state("notify", options.notify or false)
-  local hops = options.hops
-  table.sort(hops, function(x, y)
-    local x_compare, y_compare = x.key, y.key
-    if type(x.key) == "table" then
-      x_compare = x.key[1]
-    end
-    if type(y.key) == "table" then
-      y_compare = y.key[1]
-    end
-    return x_compare > y_compare
-  end)
+  local hops = sort_hops(options.hops)
   set_state("hops", hops)
   set_state("init", true)
 end
