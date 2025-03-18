@@ -60,8 +60,11 @@ local function filename(pathstr)
   end
 end
 
-local function hop_desc(hop)
-  return hop.desc or hop.tag or filename(hop.path)
+local function hop_desc(hop, desc_fallback)
+  if desc_fallback == "filename" then
+    return hop.desc or hop.tag or filename(hop.path)
+  end
+  return hop.desc or hop.tag or hop.path
 end
 
 local function sort_hops(hops)
@@ -73,7 +76,7 @@ local function sort_hops(hops)
     elseif t == "string" and string.lower(key) ~= key then
       -- If uppercase letter (signifying an ephemeral hop), prepend "z"
       -- so it gets sorted after lowercase persistent hops
-      return "z"..key
+      return "z" .. key
     end
     return key
   end
@@ -125,7 +128,7 @@ local function validate_options(options)
   if type(options) ~= "table" then
     return "Invalid config"
   end
-  local hops, fuzzy_cmd, notify, marks = options.hops, options.fuzzy_cmd, options.notify, options.marks
+  local hops, desc_fallback, fuzzy_cmd, notify = options.hops, options.desc_fallback, options.fuzzy_cmd, options.notify
   -- Validate hops
   if type(hops) == "table" then
     local used_keys = {}
@@ -153,12 +156,12 @@ local function validate_options(options)
     return 'Invalid "hops" config value'
   end
   -- Validate other options
-  if fuzzy_cmd ~= nil and type(fuzzy_cmd) ~= "string" then
+  if desc_fallback ~= nil and desc_fallback ~= "filename" and desc_fallback ~= "path" then
+    return 'Invalid "desc_fallback" config value'
+  elseif fuzzy_cmd ~= nil and type(fuzzy_cmd) ~= "string" then
     return 'Invalid "fuzzy_cmd" config value'
   elseif notify ~= nil and type(notify) ~= "boolean" then
     return 'Invalid "notify" config value'
-  elseif marks ~= nil and type(marks) ~= "boolean" then
-    return 'Invalid "marks" config value'
   end
 end
 
@@ -250,10 +253,11 @@ local function init()
     fail(err)
     return
   end
+  -- Set default config values
+  set_state("desc_fallback", options.desc_fallback or "filename")
   set_state("fuzzy_cmd", options.fuzzy_cmd or "fzf")
   set_state("notify", options.notify or false)
-  local hops = sort_hops(options.hops)
-  set_state("hops", hops)
+  set_state("hops", sort_hops(options.hops))
   set_state("init", true)
 end
 
