@@ -86,7 +86,7 @@ local function sort_hops(hops)
   return hops
 end
 
-local create_special_hops = function()
+local create_special_hops = function(desc_strategy)
   local hops = {}
   table.insert(hops, { key = "<Enter>", desc = "Create hop", path = "__MARK__" })
   table.insert(hops, { key = "<Space>", desc = "Fuzzy search", path = "__FUZZY__" })
@@ -128,7 +128,7 @@ local function validate_options(options)
   if type(options) ~= "table" then
     return "Invalid config"
   end
-  local hops, desc_fallback, fuzzy_cmd, notify = options.hops, options.desc_fallback, options.fuzzy_cmd, options.notify
+  local hops, desc_strategy, fuzzy_cmd, notify = options.hops, options.desc_strategy, options.fuzzy_cmd, options.notify
   -- Validate hops
   if type(hops) == "table" then
     local used_keys = {}
@@ -156,8 +156,8 @@ local function validate_options(options)
     return 'Invalid "hops" config value'
   end
   -- Validate other options
-  if desc_fallback ~= nil and desc_fallback ~= "filename" and desc_fallback ~= "path" then
-    return 'Invalid "desc_fallback" config value'
+  if desc_strategy ~= nil and desc_strategy ~= "path" and desc_strategy ~= "filename" then
+    return 'Invalid "desc_strategy" config value'
   elseif fuzzy_cmd ~= nil and type(fuzzy_cmd) ~= "string" then
     return 'Invalid "fuzzy_cmd" config value'
   elseif notify ~= nil and type(notify) ~= "boolean" then
@@ -231,13 +231,13 @@ local hop = function(hops, fuzzy_cmd, notify)
     end
     return
   elseif selected_hop.path == "__FUZZY__" then
-    local fuzzy_hop = select_fuzzy(hops, fuzzy_cmd)
+    local fuzzy_hop = select_fuzzy(hops, config.fuzzy_cmd)
     if not fuzzy_hop then return end
     selected_hop = fuzzy_hop
   end
   ya.mgr_emit("cd", { selected_hop.path })
   -- TODO: Better way to verify hop was successful?
-  if notify then
+  if config.notify then
     local desc = selected_hop.desc
     if desc then
       info('Hopped to ' .. desc)
@@ -254,10 +254,19 @@ local function init()
     return
   end
   -- Set default config values
-  set_state("desc_fallback", options.desc_fallback or "filename")
-  set_state("fuzzy_cmd", options.fuzzy_cmd or "fzf")
-  set_state("notify", options.notify or false)
-  set_state("hops", sort_hops(options.hops))
+  local desc_strategy = options.desc_strategy or "path"
+  set_state("config", {
+    desc_strategy = desc_strategy,
+    fuzzy_cmd = options.fuzzy_cmd or "fzf",
+    notify = options.notify or false
+  })
+  -- Set hops after ensuring they all have a description
+  local hops = {}
+  for _, hop in pairs(options.hops) do
+    hop.desc = hop.desc or path_to_desc(hop.path, desc_strategy)
+    table.insert(hops, hop)
+  end
+  set_state("hops", sort_hops(hops))
   set_state("init", true)
 end
 
@@ -293,7 +302,7 @@ return {
       fail(init_error)
       return
     end
-    local hops, fuzzy_cmd, notify = get_state("hops"), get_state("fuzzy_cmd"), get_state("notify")
-    hop(hops, fuzzy_cmd, notify)
+    local hops, config = get_state("hops"), get_state("config")
+    attempt_hop(hops, config)
   end,
 }
