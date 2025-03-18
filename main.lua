@@ -93,6 +93,8 @@ local validate_options = function(options)
         return hop .. 'has missing key'
       elseif type(item.key) ~= "string" or #item.key ~= 1 then
         return hop .. 'has invalid key'
+      elseif item.key == string.upper(item.key) then
+        return hop .. 'must use lowercase key'
       elseif not item.path then
         return hop .. 'has missing path'
       elseif type(item.path) ~= "string" or #item.path == 0 then
