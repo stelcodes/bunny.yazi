@@ -121,7 +121,7 @@ end
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/src/process/child.rs
 local select_fuzzy = function(hops, fuzzy_cmd)
-  local _permit = ya.hide()
+  local permit = ya.hide()
   local child, spawn_err =
       Command(fuzzy_cmd):stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
   if not child then
@@ -136,6 +136,7 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   child:write_all(table.concat(input_lines, "\n"))
   child:flush()
   local output, output_err = child:wait_with_output()
+  permit:drop()
   if not output.status.success then
     if output.status.code ~= 130 then -- user pressed escape to quit
       fail("Command `%s` failed with code %s", fuzzy_cmd, output_err.code)
