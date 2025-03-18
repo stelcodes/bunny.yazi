@@ -61,13 +61,13 @@ local function filename(pathstr)
 end
 
 local function hop_desc(hop)
-  return hop.tag or filename(hop.path)
+  return hop.desc or filename(hop.path)
 end
 
 local create_special_hops = function()
   local hops = {}
-  table.insert(hops, { key = "<Space>", tag = "Create mark", path = "__MARK__" })
-  table.insert(hops, { key = "<Enter>", tag = "Fuzzy search", path = "__FUZZY__" })
+  table.insert(hops, { key = "<Space>", desc = "Create mark", path = "__MARK__" })
+  table.insert(hops, { key = "<Enter>", desc = "Fuzzy search", path = "__FUZZY__" })
   local tabhist = get_state("tabhist")
   local tab = get_current_tab_idx()
   if tabhist[tab] and tabhist[tab][2] then
@@ -99,10 +99,8 @@ local validate_options = function(options)
         return hop .. 'has missing path'
       elseif type(item.path) ~= "string" or #item.path == 0 then
         return hop .. 'has invalid path'
-      elseif not item.tag then
-        return hop .. 'has missing tag'
-      elseif type(item.tag) ~= "string" or #item.tag == 0 then
-        return hop .. 'has invalid tag'
+      elseif item.desc and type(item.desc) ~= "string" then
+        return hop .. 'has invalid desc'
       end
       -- Check for duplicate keys
       if string.find(used_keys, item.key, 1, true) then
@@ -147,12 +145,12 @@ local select_fuzzy = function(hops, fuzzy_cmd)
     return
   end
   -- Parse fzf output
-  local tag, path = string.match(output.stdout, "(.-)\t(.-)\n")
-  if not tag or not path or path == "" then
+  local desc, path = string.match(output.stdout, "(.-)\t(.-)\n")
+  if not desc or not path or path == "" then
     fail("Failed to parse fuzzy searcher result")
     return
   end
-  return { tag = tag, path = path }
+  return { desc = desc, path = path }
 end
 
 local hop = function(hops, fuzzy_cmd, notify)
