@@ -61,7 +61,7 @@ local function filename(pathstr)
 end
 
 local function hop_desc(hop)
-  return hop.desc or filename(hop.path)
+  return hop.desc or hop.tag or filename(hop.path)
 end
 
 local create_special_hops = function()
@@ -80,34 +80,57 @@ local create_special_hops = function()
   return hops
 end
 
-local validate_options = function(options)
+local function validate_options(options)
+  local function validate_key(key)
+    local kt = type(key)
+    if not key then
+      return false, "key is missing"
+    elseif kt == "string" then
+      if string.len(key) ~= 1 or string.upper(key) == key then
+        return false, "key must be lowercase letter"
+      end
+    elseif kt == "table" then
+      if #key == 0 then
+        return false, "key cannot be empty table"
+      end
+      for _, char in pairs(key) do
+        if type(char) ~= "string" or string.len(key) ~= 1 or string.upper(key) == key then
+          return false, "key must be lowercase letter"
+        end
+      end
+    else
+      return false, "key must be string or table"
+    end
+    return true, ""
+  end
+  if type(options) ~= "table" then
+    return "Invalid config"
+  end
   local hops, fuzzy_cmd, notify, marks = options.hops, options.fuzzy_cmd, options.notify, options.marks
   -- Validate hops
-  if hops ~= nil and type(hops) ~= "table" then
-    return 'Invalid "hops" config value'
-  elseif hops ~= nil then
+  if type(hops) == "table" then
     local used_keys = ""
-    for idx, item in pairs(hops) do
-      local hop = 'Invalid "hops" config value: #' .. idx .. " "
-      if not item.key then
-        return hop .. 'has missing key'
-      elseif type(item.key) ~= "string" or #item.key ~= 1 then
-        return hop .. 'has invalid key'
-      elseif item.key == string.upper(item.key) then
-        return hop .. 'must use lowercase key'
-      elseif not item.path then
-        return hop .. 'has missing path'
-      elseif type(item.path) ~= "string" or #item.path == 0 then
-        return hop .. 'has invalid path'
-      elseif item.desc and type(item.desc) ~= "string" then
-        return hop .. 'has invalid desc'
+    for idx, hop in pairs(hops) do
+      hop.desc = hop.desc or hop.tag or nil -- used to be tag, allow for backwards compat
+      local key_is_valid, key_err = validate_key(hop.key)
+      local err = 'Invalid "hops" config value: #' .. idx .. " "
+      if not key_is_valid then
+        return err .. key_err
+      elseif not hop.path then
+        return err .. 'path is missing'
+      elseif type(hop.path) ~= "string" or string.len(hop.path) == 0 then
+        return err .. 'path must be non-empty string'
+      elseif hop.desc and (type(hop.desc) ~= "string" or string.len(hop.path) == 0) then
+        return err .. 'desc must be non-empty string'
       end
       -- Check for duplicate keys
-      if string.find(used_keys, item.key, 1, true) then
-        return hop .. 'has duplicate key'
+      if string.find(used_keys, hop.key, 1, true) then
+        return err .. 'needs unique key'
       end
-      used_keys = used_keys .. item.key
+      used_keys = used_keys .. hop.key
     end
+  else
+    return 'Invalid "hops" config value'
   end
   -- Validate other options
   if fuzzy_cmd ~= nil and type(fuzzy_cmd) ~= "string" then
