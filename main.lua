@@ -200,27 +200,27 @@ local hop = function(hops, fuzzy_cmd, notify)
   end
 end
 
+local function init()
+  local options = get_state("options")
+  local err = validate_options(options)
+  if err then
+    set_state("init_error", err)
+    fail(err)
+    return
+  end
+  set_state("fuzzy_cmd", options.fuzzy_cmd or "fzf")
+  set_state("notify", options.notify or false)
+  local hops = options.hops
+  table.sort(hops, function(x, y)
+    return x.key > y.key
+  end)
+  set_state("hops", hops)
+  set_state("init", true)
+end
+
 return {
   setup = function(state, options)
-    local err = validate_options(options)
-    if err then
-      state.init_error = err
-      fail(err)
-      return
-    end
-    state.fuzzy_cmd = options.fuzzy_cmd or "fzf"
-    state.notify = options.notify or false
-    local hops = options.hops or {}
-    table.sort(hops, function(x, y)
-      local same_letter = string.lower(x.key) == string.lower(y.key)
-      if same_letter then
-        -- lowercase comes first
-        return x.key > y.key
-      else
-        return string.lower(x.key) < string.lower(y.key)
-      end
-    end)
-    state.hops = hops
+    state.options = options
     ps.sub("cd", function(body)
       -- Note: This callback is sync and triggered at startup!
       local tab = body.tab -- type number
@@ -242,6 +242,9 @@ return {
     end)
   end,
   entry = function()
+    if not get_state("init") then
+      init()
+    end
     local init_error = get_state("init_error")
     if init_error then
       fail(init_error)
