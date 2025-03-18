@@ -94,8 +94,8 @@ local function validate_options(options)
         return false, "key cannot be empty table"
       end
       for _, char in pairs(key) do
-        if type(char) ~= "string" or string.len(key) ~= 1 or string.upper(key) == key then
-          return false, "key must be lowercase letter"
+        if type(char) ~= "string" or string.len(char) ~= 1 or string.upper(char) == char then
+          return false, "key list must contain lowercase letters"
         end
       end
     else
@@ -109,7 +109,7 @@ local function validate_options(options)
   local hops, fuzzy_cmd, notify, marks = options.hops, options.fuzzy_cmd, options.notify, options.marks
   -- Validate hops
   if type(hops) == "table" then
-    local used_keys = ""
+    local used_keys = {}
     for idx, hop in pairs(hops) do
       hop.desc = hop.desc or hop.tag or nil -- used to be tag, allow for backwards compat
       local key_is_valid, key_err = validate_key(hop.key)
@@ -124,10 +124,11 @@ local function validate_options(options)
         return err .. 'desc must be non-empty string'
       end
       -- Check for duplicate keys
-      if string.find(used_keys, hop.key, 1, true) then
+      if used_keys[hop.key] then
         return err .. 'needs unique key'
       end
-      used_keys = used_keys .. hop.key
+      -- Insert hop keys as table keys to easily check for set membership
+      used_keys[hop.key] = true
     end
   else
     return 'Invalid "hops" config value'
@@ -235,7 +236,14 @@ local function init()
   set_state("notify", options.notify or false)
   local hops = options.hops
   table.sort(hops, function(x, y)
-    return x.key > y.key
+    local x_compare, y_compare = x.key, y.key
+    if type(x.key) == "table" then
+      x_compare = x.key[1]
+    end
+    if type(y.key) == "table" then
+      y_compare = y.key[1]
+    end
+    return x_compare > y_compare
   end)
   set_state("hops", hops)
   set_state("init", true)
