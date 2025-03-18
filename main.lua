@@ -60,11 +60,19 @@ local function filename(pathstr)
   end
 end
 
-local function hop_desc(hop, desc_fallback)
-  if desc_fallback == "filename" then
-    return hop.desc or hop.tag or filename(hop.path)
+local function path_to_desc(path, strategy)
+  if strategy == "filename" then
+    return filename(path)
   end
-  return hop.desc or hop.tag or hop.path
+  local home = os.getenv("HOME")
+  if home and home ~= "" then
+    local startPos, endPos = string.find(path, home)
+    -- Only substitute if the match is from the start of path, very important
+    if startPos == 1 then
+      return path:sub(1, startPos - 1) .. "~" .. path:sub(endPos + 1)
+    end
+  end
+  return tostring(path)
 end
 
 local function sort_hops(hops)
@@ -94,10 +102,10 @@ local create_special_hops = function(desc_strategy)
   local tab = get_current_tab_idx()
   if tabhist[tab] and tabhist[tab][2] then
     local previous_dir = tabhist[tab][2]
-    table.insert(hops, { key = "<Backspace>", path = previous_dir })
+    table.insert(hops, { key = "<Backspace>", path = previous_dir, desc = path_to_desc(previous_dir, desc_strategy) })
   end
   for idx, tab_path in pairs(get_tabs_as_paths()) do
-    table.insert(hops, { key = tostring(idx), path = tab_path })
+    table.insert(hops, { key = tostring(idx), path = tab_path, desc = path_to_desc(tab_path, desc_strategy) })
   end
   return hops
 end
@@ -178,7 +186,11 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   -- Build fzf input string
   local input_lines = {};
   for _, hop in pairs(hops) do
-    table.insert(input_lines, hop_desc(hop) .. "\t" .. hop.path)
+    local tag = " "
+    if hop.desc ~= hop.path then
+      tag = hop.desc
+    end
+    table.insert(input_lines, tag .. "\t" .. hop.path)
   end
   child:write_all(table.concat(input_lines, "\n"))
   child:flush()
@@ -199,13 +211,13 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   return { desc = desc, path = path }
 end
 
-local hop = function(hops, fuzzy_cmd, notify)
+local attempt_hop = function(hops, config)
   local cands = {}
-  for _, hop in pairs(create_special_hops()) do
-    table.insert(cands, { desc = hop_desc(hop), on = hop.key, path = hop.path })
+  for _, hop in pairs(create_special_hops(config.desc_strategy)) do
+    table.insert(cands, { desc = hop.desc, on = hop.key, path = hop.path })
   end
   for _, hop in pairs(hops) do
-    table.insert(cands, { desc = hop_desc(hop), on = hop.key, path = hop.path })
+    table.insert(cands, { desc = hop.desc, on = hop.key, path = hop.path })
   end
   local hops_idx = ya.which { cands = cands }
   if not hops_idx then return end
@@ -222,11 +234,12 @@ local hop = function(hops, fuzzy_cmd, notify)
     for _, char in pairs(valid_chars) do
       table.insert(mark_cands, { on = char })
     end
-    info("Press a letter to create mark")
+    info("Press a letter to create new hop")
     local char_idx = ya.which { cands = mark_cands, silent = true }
     if char_idx ~= nil then
       local selected_char = string.upper(mark_cands[char_idx].on)
-      table.insert(hops, { key = selected_char, path = get_cwd() })
+      local cwd = get_cwd()
+      table.insert(hops, { key = selected_char, path = cwd, desc = path_to_desc(cwd, config.desc_strategy) })
       set_state("hops", sort_hops(hops))
     end
     return
