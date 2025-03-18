@@ -60,6 +60,9 @@ local function filename(pathstr)
   end
 end
 
+local function hop_desc(hop)
+  return hop.tag or filename(hop.path)
+end
 
 local create_special_hops = function()
   local hops = {}
