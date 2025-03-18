@@ -66,15 +66,16 @@ end
 
 local create_special_hops = function()
   local hops = {}
-  table.insert(hops, { key = "<space>", tag = "fuzzy search", path = "__FUZZY__" })
+  table.insert(hops, { key = "<Space>", tag = "Create mark", path = "__MARK__" })
+  table.insert(hops, { key = "<Enter>", tag = "Fuzzy search", path = "__FUZZY__" })
   local tabhist = get_state("tabhist")
   local tab = get_current_tab_idx()
   if tabhist[tab] and tabhist[tab][2] then
     local previous_dir = tabhist[tab][2]
-    table.insert(hops, { key = "<backspace>", tag = filename(previous_dir), path = previous_dir })
+    table.insert(hops, { key = "<Backspace>", path = previous_dir })
   end
   for idx, tab_path in pairs(get_tabs_as_paths()) do
-    table.insert(hops, { key = tostring(idx), tag = filename(tab_path), path = tab_path })
+    table.insert(hops, { key = tostring(idx), path = tab_path })
   end
   return hops
 end
@@ -130,8 +131,8 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   end
   -- Build fzf input string
   local input_lines = {};
-  for _, item in pairs(hops) do
-    table.insert(input_lines, item.tag .. "\t" .. item.path)
+  for _, hop in pairs(hops) do
+    table.insert(input_lines, hop_desc(hop) .. "\t" .. hop.path)
   end
   child:write_all(table.concat(input_lines, "\n"))
   child:flush()
@@ -154,56 +155,47 @@ end
 
 local hop = function(hops, fuzzy_cmd, notify)
   local cands = {}
-  for _, item in pairs(create_special_hops()) do
-    table.insert(cands, { desc = item.tag, on = item.key, path = item.path })
+  for _, hop in pairs(create_special_hops()) do
+    table.insert(cands, { desc = hop_desc(hop), on = hop.key, path = hop.path })
   end
-  for _, item in pairs(hops) do
-    table.insert(cands, { desc = item.tag, on = item.key, path = item.path })
+  for _, hop in pairs(hops) do
+    table.insert(cands, { desc = hop_desc(hop), on = hop.key, path = hop.path })
   end
-  local idx = ya.which { cands = cands }
-  if idx == nil then
-    return
-  end
-  local selection = cands[idx]
-  local selected_hop = { tag = selection.desc, path = selection.path }
+  local hops_idx = ya.which { cands = cands }
+  if not hops_idx then return end
+  local selected_hop = cands[hops_idx]
   -- Handle special hops
   if selected_hop.path == "__MARK__" then
-    local cwd = get_cwd()
-    if cwd then
-      set_state("mark", cwd)
-      if notify then
-        info("Marked current directory")
-      end
-    else
-      fail("Failed to set mark")
+    local valid_chars = {
+      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+      'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    }
+    local mark_cands = {};
+    for _, char in pairs(valid_chars) do
+      table.insert(mark_cands, { on = char })
     end
-    return
-  elseif selected_hop.path == "__NOOP__" then
-    if notify then
-      info("No marked directory")
+    info("Press a letter to create mark")
+    local char_idx = ya.which { cands = mark_cands, silent = true }
+    if char_idx ~= nil then
+      local selected_char = string.upper(mark_cands[char_idx].on)
+      debug(type(get_cwd()), get_cwd())
+      table.insert(hops, { key = selected_char, path = get_cwd() })
+      set_state("hops", hops)
     end
     return
   elseif selected_hop.path == "__FUZZY__" then
-    local mark_state = get_state("mark")
-    if mark_state and mark_state ~= "" then
-      table.insert(hops, { key = "", tag = "marked", path = mark_state, })
-    end
     local fuzzy_hop = select_fuzzy(hops, fuzzy_cmd)
-    if fuzzy_hop then
-      selected_hop = fuzzy_hop
-    else
-      return
-    end
+    if not fuzzy_hop then return end
+    selected_hop = fuzzy_hop
   end
   ya.mgr_emit("cd", { selected_hop.path })
   -- TODO: Better way to verify hop was successful?
   if notify then
-    local tag = selected_hop.tag
-    if tag == "hop to mark" then
-      tag = "mark"
-    end
-    if tag then
-      info('Hopped to ' .. tag)
+    local desc = selected_hop.desc
+    if desc then
+      info('Hopped to ' .. desc)
     end
   end
 end
