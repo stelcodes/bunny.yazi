@@ -14,7 +14,7 @@ This is a bookmark plugin for [yazi](https://github.com/sxyazi/yazi) which augme
 - Single menu for all functionality, therefore only one keymap is required in your `keymap.toml` file
 - Hands off: no reads or writes to your filesystem, all state is kept in memory
 
-<!-- <img src="https://i.imgur.com/3a47LI8.png" alt="bunny.yazi menu"/> -->
+<img src="https://i.imgur.com/9OKQJUT.png" alt="bunny.yazi menu open in a terminal"/>
 
 ## Installation
 
@@ -54,14 +54,14 @@ programs.yazi = {
 ```lua
 require("bunny"):setup({
   hops = {
-    { key = "r",          path = "/",              desc = "Root"         },
-    { key = "t",          path = "/tmp",           desc = "Temp files"   },
+    { key = "r",          path = "/",                                    },
+    { key = "v",          path = "/var",                                 },
+    { key = "t",          path = "/tmp",                                 },
+    { key = "n",          path = "/nix/store",                           },
     { key = { "h", "h" }, path = "~",              desc = "Home"         },
-    { key = { "h", "m" }, path = "~/Music"         desc = "Music"        },
-    { key = { "h", "d" }, path = "~/Documents"     desc = "Documents"    },
-    { key = { "h", "k" }, path = "~/Desktop"       desc = "Desktop"      },
-    { key = { "n", "c" }, path = "~/.config/nix",  desc = "Nix config"   },
-    { key = { "n", "s" }, path = "/nix/store",     desc = "Nix store"    },
+    { key = { "h", "m" }, path = "~/Music",        desc = "Music"        },
+    { key = { "h", "d" }, path = "~/Documents",    desc = "Documents"    },
+    { key = { "h", "k" }, path = "~/Desktop",      desc = "Desktop"      },
     { key = "c",          path = "~/.config",      desc = "Config files" },
     { key = { "l", "s" }, path = "~/.local/share", desc = "Local share"  },
     { key = { "l", "b" }, path = "~/.local/bin",   desc = "Local bin"    },
