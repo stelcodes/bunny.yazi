@@ -254,8 +254,13 @@ local attempt_hop = function(hops, config)
     if not fuzzy_hop then return end
     selected_hop = fuzzy_hop
   end
+  local _, dir_list_err = fs.read_dir(Url(selected_hop.path), { limit = 1, resolve = true })
+  if dir_list_err then
+    fail("Invalid directory " .. path_to_desc(selected_hop.path))
+    return
+  end
+  -- Assuming that if I can fs.read_dir, then this will also succeed
   ya.mgr_emit("cd", { selected_hop.path })
-  -- TODO: Better way to verify hop was successful?
   if config.notify then
     local desc = selected_hop.desc
     if desc then
