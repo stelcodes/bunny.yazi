@@ -175,22 +175,25 @@ end
 
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/src/process/child.rs
-local select_fuzzy = function(hops, fuzzy_cmd)
+local select_fuzzy = function(hops, config)
   local permit = ya.hide()
   local child, spawn_err =
-      Command(fuzzy_cmd):stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
+      Command(config.fuzzy_cmd):stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
   if not child then
-    fail("Command `%s` failed with code %s. Do you have it installed?", fuzzy_cmd, spawn_err.code)
+    fail("Command `%s` failed with code %s. Do you have it installed?", config.fuzzy_cmd, spawn_err.code)
     return
   end
   -- Build fzf input string
   local input_lines = {};
   for _, hop in pairs(hops) do
-    local tag = " "
-    if hop.desc ~= hop.path then
-      tag = hop.desc
+    local fuzzy_desc = hop.desc
+    -- Avoid repeating path twice
+    if fuzzy_desc == hop.path then
+      fuzzy_desc = ""
     end
-    table.insert(input_lines, tag .. "\t" .. hop.path)
+    -- right pad the desc so the tabs line up assuming every desc is less than 23 chars
+    local line = fuzzy_desc .. string.rep(" ", 23 - #fuzzy_desc) .. "\t" .. hop.path
+    table.insert(input_lines, line)
   end
   child:write_all(table.concat(input_lines, "\n"))
   child:flush()
@@ -198,15 +201,18 @@ local select_fuzzy = function(hops, fuzzy_cmd)
   permit:drop()
   if not output.status.success then
     if output.status.code ~= 130 then -- user pressed escape to quit
-      fail("Command `%s` failed with code %s", fuzzy_cmd, output_err.code)
+      fail("Command `%s` failed with code %s", config.fuzzy_cmd, output_err.code)
     end
     return
   end
-  -- Parse fzf output
-  local desc, path = string.match(output.stdout, "(.-)\t(.-)\n")
+  -- Parse fzf output, remove right padded spaces from desc
+  local desc, path = string.match(output.stdout, "^(.-) *\t(.-)\n$")
   if not desc or not path or path == "" then
     fail("Failed to parse fuzzy searcher result")
     return
+  end
+  if desc == "" then
+    desc = path_to_desc(path, config.desc_strategy)
   end
   return { desc = desc, path = path }
 end
@@ -244,7 +250,7 @@ local attempt_hop = function(hops, config)
     end
     return
   elseif selected_hop.path == "__FUZZY__" then
-    local fuzzy_hop = select_fuzzy(hops, config.fuzzy_cmd)
+    local fuzzy_hop = select_fuzzy(hops, config)
     if not fuzzy_hop then return end
     selected_hop = fuzzy_hop
   end
