@@ -2,9 +2,7 @@
 
 *🩷 Hop around your filesystem 🩷*
 
-This is an intentionally simple yet effective directory bookmark plugin for [yazi](https://github.com/sxyazi/yazi).
-
-Bookmarks are referred to as *hops* because maximizing cuteness is a top priority.
+This is a bookmark plugin for [yazi](https://github.com/sxyazi/yazi) which augments the builtin bookmarking abilities into a single menu of `cd` powers designed with user experience (and cuteness) in mind. Bookmarks are referred to as *hops* because users should always feel adorable while using their terminal.
 
 ## Features
 
@@ -12,7 +10,7 @@ Bookmarks are referred to as *hops* because maximizing cuteness is a top priorit
 - Create ephemeral hops while using yazi (uppercase letters only)
 - Hop to any directory open in another tab
 - Hop back to previous directory (history is associated with tab number)
-- Hop by fuzzy searching all available hops with [fzf](https://github.com/junegunn/fzf) or similar program
+- Hop by fuzzy searching available hops with [fzf](https://github.com/junegunn/fzf) or similar program
 - Single menu for all functionality, therefore only one keymap is required in your `keymap.toml` file
 - Hands off: no reads or writes to your filesystem, all state is kept in memory
 
@@ -54,25 +52,25 @@ programs.yazi = {
 ## Configuration
 `~/.config/yazi/init.lua`:
 ```lua
-local home = os.getenv("HOME")
 require("bunny"):setup({
   hops = {
-    { key = "r", path = "/", desc = "Root" },
-    { key = "t", path = "/tmp", desc = "Temp files" },
-    { key = { "h", "h" }, path = home, desc = "Home" },
-    { key = { "h", "m" }, path = home.."/Music" },
-    { key = { "h", "d" }, path = home.."/Documents" },
-    { key = { "h", "k" }, path = home.."/Desktop" },
-    { key = { "n", "c" }, path = home.."/.config/nix", desc = "Nix config" },
-    { key = { "n", "s" }, path = "/nix/store", desc = "Nix store" },
-    { key = "c", path = home.."/.config", desc = "Config files" },
-    { key = { "l", "s" }, path = home.."/.local/share", desc = "Local share" },
-    { key = { "l", "b" }, path = home.."/.local/bin", desc = "Local bin" },
-    { key = { "l", "t" }, path = home.."/.local/state", desc = "Local state" },
+    { key = "r",          path = "/",              desc = "Root"         },
+    { key = "t",          path = "/tmp",           desc = "Temp files"   },
+    { key = { "h", "h" }, path = "~",              desc = "Home"         },
+    { key = { "h", "m" }, path = "~/Music"         desc = "Music"        },
+    { key = { "h", "d" }, path = "~/Documents"     desc = "Documents"    },
+    { key = { "h", "k" }, path = "~/Desktop"       desc = "Desktop"      },
+    { key = { "n", "c" }, path = "~/.config/nix",  desc = "Nix config"   },
+    { key = { "n", "s" }, path = "/nix/store",     desc = "Nix store"    },
+    { key = "c",          path = "~/.config",      desc = "Config files" },
+    { key = { "l", "s" }, path = "~/.local/share", desc = "Local share"  },
+    { key = { "l", "b" }, path = "~/.local/bin",   desc = "Local bin"    },
+    { key = { "l", "t" }, path = "~/.local/state", desc = "Local state"  },
     -- key and path attributes are required, desc is optional
   },
-  notify = true, -- notify after hopping, default is false
-  fuzzy_cmd = "sk", -- fuzzy searching command, default is fzf
+  desc_strategy = "path", -- If desc isn't present, use "path" or "filename", default is "path"
+  notify = false, -- Notify after hopping, default is false
+  fuzzy_cmd = "fzf", -- Fuzzy searching command, default is "fzf"
 })
 ```
 
