@@ -18,6 +18,12 @@ This is a bookmark plugin for [yazi](https://github.com/sxyazi/yazi) which augme
 
 ## Installation
 
+### With `git`
+
+```sh
+git clone https://github.com/stelcodes/bunny.yazi ~/.config/yazi/plugins/bunny.yazi
+```
+
 ### With `yapack`
 
 ```sh
@@ -57,7 +63,7 @@ require("bunny"):setup({
     { key = "r",          path = "/",                                    },
     { key = "v",          path = "/var",                                 },
     { key = "t",          path = "/tmp",                                 },
-    { key = "n",          path = "/nix/store",                           },
+    { key = "n",          path = "/nix/store",     desc = "Nix store"    },
     { key = { "h", "h" }, path = "~",              desc = "Home"         },
     { key = { "h", "m" }, path = "~/Music",        desc = "Music"        },
     { key = { "h", "d" }, path = "~/Documents",    desc = "Documents"    },
