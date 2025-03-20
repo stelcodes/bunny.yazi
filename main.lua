@@ -69,7 +69,7 @@ local function path_to_desc(path, strategy)
     local startPos, endPos = string.find(path, home)
     -- Only substitute if the match is from the start of path, very important
     if startPos == 1 then
-      return path:sub(1, startPos - 1) .. "~" .. path:sub(endPos + 1)
+      return "~" .. path:sub(endPos + 1)
     end
   end
   return tostring(path)
@@ -262,10 +262,7 @@ local attempt_hop = function(hops, config)
   -- Assuming that if I can fs.read_dir, then this will also succeed
   ya.mgr_emit("cd", { selected_hop.path })
   if config.notify then
-    local desc = selected_hop.desc
-    if desc then
-      info('Hopped to ' .. desc)
-    end
+    info('Hopped to ' .. selected_hop.desc)
   end
 end
 
