@@ -285,6 +285,10 @@ local function init()
   local hops = {}
   for _, hop in pairs(options.hops) do
     hop.desc = hop.desc or path_to_desc(hop.path, desc_strategy)
+    -- Manually replace ~ from users so we can make a valid Url later to check if dir exists
+    if string.sub(hop.path, 1, 1) == "~" then
+      hop.path = os.getenv("HOME") .. hop.path:sub(2)
+    end
     table.insert(hops, hop)
   end
   set_state("hops", sort_hops(hops))
