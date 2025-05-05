@@ -202,16 +202,22 @@ local select_fuzzy = function(hops, config)
     fail("Command `%s` failed with code %s. Do you have it installed?", config.fuzzy_cmd, spawn_err.code)
     return
   end
-  -- Build fzf input string
-  local input_lines = {};
+  local fuzzy_entries = {}
   for _, hop in pairs(hops) do
-    local fuzzy_desc = hop.desc
-    -- Avoid repeating path twice
-    if fuzzy_desc == hop.path then
-      fuzzy_desc = ""
+    local existing_desc = fuzzy_entries[hop.path]
+    if not existing_desc or existing_desc == "" then
+      local fuzzy_desc = hop.desc
+      -- Avoid repeating path in description
+      if fuzzy_desc == hop.path then
+        fuzzy_desc = ""
+      end
+      fuzzy_entries[hop.path] = fuzzy_desc
     end
-    -- right pad the desc so the tabs line up assuming every desc is less than 23 chars
-    local line = fuzzy_desc .. string.rep(" ", 23 - #fuzzy_desc) .. "\t" .. hop.path
+  end
+  -- Build fzf input string
+  local input_lines = {}
+  for entry_path, entry_desc in pairs(fuzzy_entries) do
+    local line = entry_desc .. string.rep(" ", 23 - #entry_desc) .. "\t" .. entry_path
     table.insert(input_lines, line)
   end
   child:write_all(table.concat(input_lines, "\n"))
