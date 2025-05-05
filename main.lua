@@ -94,18 +94,31 @@ local function sort_hops(hops)
   return hops
 end
 
-local create_special_hops = function(desc_strategy)
+local create_special_hops = function(config)
   local hops = {}
-  table.insert(hops, { key = "<Enter>", desc = "Create hop", path = "__MARK__" })
+  local desc_strategy, tabs, ephemeral = config.desc_strategy, config.tabs, config.ephemeral
+  if ephemeral then
+    table.insert(hops, { key = "<Enter>", desc = "Create hop", path = "__MARK__" })
+  end
   table.insert(hops, { key = "<Space>", desc = "Fuzzy search", path = "__FUZZY__" })
   local tabhist = get_state("tabhist")
   local tab = get_current_tab_idx()
   if tabhist[tab] and tabhist[tab][2] then
     local previous_dir = tabhist[tab][2]
-    table.insert(hops, { key = "<Backspace>", path = previous_dir, desc = path_to_desc(previous_dir, desc_strategy) })
+    table.insert(hops, {
+      key = "<Backspace>",
+      path = previous_dir,
+      desc = path_to_desc(previous_dir, desc_strategy)
+    })
   end
-  for idx, tab_path in pairs(get_tabs_as_paths()) do
-    table.insert(hops, { key = tostring(idx), path = tab_path, desc = path_to_desc(tab_path, desc_strategy) })
+  if tabs then
+    for idx, tab_path in pairs(get_tabs_as_paths()) do
+      table.insert(hops, {
+        key = tostring(idx),
+        path = tab_path,
+        desc = path_to_desc(tab_path, desc_strategy)
+      })
+    end
   end
   return hops
 end
@@ -136,7 +149,9 @@ local function validate_options(options)
   if type(options) ~= "table" then
     return "Invalid config"
   end
-  local hops, desc_strategy, fuzzy_cmd, notify = options.hops, options.desc_strategy, options.fuzzy_cmd, options.notify
+  local hops, desc_strategy, tabs, ephemeral, fuzzy_cmd, notify =
+      options.hops, options.desc_strategy, options.tabs,
+      options.ephemeral, options.fuzzy_cmd, options.notify
   -- Validate hops
   if type(hops) == "table" then
     local used_keys = {}
@@ -166,6 +181,10 @@ local function validate_options(options)
   -- Validate other options
   if desc_strategy ~= nil and desc_strategy ~= "path" and desc_strategy ~= "filename" then
     return 'Invalid "desc_strategy" config value'
+  elseif tabs ~= nil and type(notify) ~= "boolean" then
+    return 'Invalid "tabs" config value'
+  elseif ephemeral ~= nil and type(notify) ~= "boolean" then
+    return 'Invalid "ephemeral" config value'
   elseif fuzzy_cmd ~= nil and type(fuzzy_cmd) ~= "string" then
     return 'Invalid "fuzzy_cmd" config value'
   elseif notify ~= nil and type(notify) ~= "boolean" then
@@ -219,7 +238,7 @@ end
 
 local attempt_hop = function(hops, config)
   local cands = {}
-  for _, hop in pairs(create_special_hops(config.desc_strategy)) do
+  for _, hop in pairs(create_special_hops(config)) do
     table.insert(cands, { desc = hop.desc, on = hop.key, path = hop.path })
   end
   for _, hop in pairs(hops) do
