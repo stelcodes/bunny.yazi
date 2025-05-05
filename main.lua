@@ -50,6 +50,26 @@ local get_tabs_as_paths = ya.sync(function(state)
   return result
 end)
 
+-- Ideally any unicode character would be supported, but yazi.which
+-- requies a concrete list of candidates for ephemeral marks
+local valid_keys = {
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  '`', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-',
+  '_', '=', '+', '[', '{', ']', '}', '|', ';', ':', "'", '"', ',',
+  '<', '.', '>', '/', '?',
+}
+
+local function validate_key(char)
+  for _, valid_char in ipairs(valid_keys) do
+    if char == valid_char then
+      return true
+    end
+  end
+end
+
 local function filename(pathstr)
   if pathstr == "/" then return pathstr end
   local url_name = Url(pathstr):name()
@@ -111,21 +131,21 @@ local create_special_hops = function(desc_strategy)
 end
 
 local function validate_options(options)
-  local function validate_key(key)
+  local function validate_key_(key)
     local kt = type(key)
     if not key then
       return false, "key is missing"
     elseif kt == "string" then
-      if string.len(key) ~= 1 or string.upper(key) == key then
-        return false, "key must be lowercase letter"
+      if not validate_key(key) then
+        return false, "key is invalid character"
       end
     elseif kt == "table" then
       if #key == 0 then
         return false, "key cannot be empty table"
       end
       for _, char in pairs(key) do
-        if type(char) ~= "string" or string.len(char) ~= 1 or string.upper(char) == char then
-          return false, "key list must contain lowercase letters"
+        if not validate_key(char) then
+          return false, "key list contains invalid character"
         end
       end
     else
@@ -142,9 +162,9 @@ local function validate_options(options)
     local used_keys = {}
     for idx, hop in pairs(hops) do
       hop.desc = hop.desc or hop.tag or nil -- used to be tag, allow for backwards compat
-      local key_is_valid, key_err = validate_key(hop.key)
+      local key_is_validated, key_err = validate_key_(hop.key)
       local err = 'Invalid "hops" config value: #' .. idx .. " "
-      if not key_is_valid then
+      if not key_is_validated then
         return err .. key_err
       elseif not hop.path then
         return err .. 'path is missing'
@@ -230,17 +250,11 @@ local attempt_hop = function(hops, config)
   local selected_hop = cands[hops_idx]
   -- Handle special hops
   if selected_hop.path == "__MARK__" then
-    local valid_chars = {
-      'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-      'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-      'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
-    }
     local mark_cands = {};
-    for _, char in pairs(valid_chars) do
+    for _, char in pairs(valid_keys) do
       table.insert(mark_cands, { on = char })
     end
-    info("Press a letter to create new hop")
+    info("Press a key to create new hop")
     local char_idx = ya.which { cands = mark_cands, silent = true }
     if char_idx ~= nil then
       local selected_char = string.upper(mark_cands[char_idx].on)
