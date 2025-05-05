@@ -6,8 +6,8 @@ This is a bookmark plugin for [yazi](https://github.com/sxyazi/yazi) which augme
 
 ## Features
 
-- Create persistent hops in your `init.lua` config file (lowercase letters only)
-- Create ephemeral hops while using yazi (uppercase letters only)
+- Create persistent hops in your `init.lua` config file
+- Create ephemeral hops while using yazi
 - Hop to any directory open in another tab
 - Hop back to previous directory (history is associated with tab number)
 - Hop by fuzzy searching available hops with [fzf](https://github.com/junegunn/fzf) or similar program
@@ -60,14 +60,13 @@ programs.yazi = {
 ```lua
 require("bunny"):setup({
   hops = {
-    { key = "r",          path = "/",                                    },
-    { key = "v",          path = "/var",                                 },
+    { key = "/",          path = "/",                                    },
     { key = "t",          path = "/tmp",                                 },
     { key = "n",          path = "/nix/store",     desc = "Nix store"    },
-    { key = { "h", "h" }, path = "~",              desc = "Home"         },
-    { key = { "h", "m" }, path = "~/Music",        desc = "Music"        },
-    { key = { "h", "d" }, path = "~/Documents",    desc = "Documents"    },
-    { key = { "h", "k" }, path = "~/Desktop",      desc = "Desktop"      },
+    { key = "~",          path = "~",              desc = "Home"         },
+    { key = "m",          path = "~/Music",        desc = "Music"        },
+    { key = "d",          path = "~/Desktop",      desc = "Desktop"      },
+    { key = "D",          path = "~/Documents",    desc = "Documents"    },
     { key = "c",          path = "~/.config",      desc = "Config files" },
     { key = { "l", "s" }, path = "~/.local/share", desc = "Local share"  },
     { key = { "l", "b" }, path = "~/.local/bin",   desc = "Local bin"    },
