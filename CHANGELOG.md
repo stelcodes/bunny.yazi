@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2025-05-15
+
+### 🚀 Features
+
+- Add "fuzzy" subcommand to immediately fuzzy search
+
+### 📚 Documentation
+
+- Update README with new fuzzy subcommand
+
+### 🧪 Testing
+
+- Update test config
+
 ## [1.2.0] - 2025-05-06
 
 ### 🚀 Features
