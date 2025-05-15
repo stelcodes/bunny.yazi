@@ -87,6 +87,12 @@ require("bunny"):setup({
 desc = "Start bunny.yazi"
 on = ";"
 run = "plugin bunny"
+
+# Optionally, add another keymap to immediately fuzzy search bookmarks
+[[manager.prepend_keymap]]
+desc = "Start bunny.yazi fuzzy search"
+on = "'"
+run = "plugin bunny fuzzy"
 ```
 
 ## Inspiration
