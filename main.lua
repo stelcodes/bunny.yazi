@@ -194,6 +194,7 @@ end
 
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/preset/plugins/fzf.lua
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/src/process/child.rs
+-- Returns nil if fzf command failed or user exited with escape key
 local select_fuzzy = function(hops, config)
   local permit = ya.hide()
   local child, spawn_err =
@@ -242,6 +243,19 @@ local select_fuzzy = function(hops, config)
   return { desc = desc, path = path }
 end
 
+local cd = function(selected_hop, config)
+  local _, dir_list_err = fs.read_dir(Url(selected_hop.path), { limit = 1, resolve = true })
+  if dir_list_err then
+    fail("Invalid directory " .. path_to_desc(selected_hop.path))
+    return
+  end
+  -- Assuming that if I can fs.read_dir, then this will also succeed
+  ya.mgr_emit("cd", { selected_hop.path })
+  if config.notify then
+    info('Hopped to ' .. selected_hop.desc)
+  end
+end
+
 local attempt_hop = function(hops, config)
   local cands = {}
   for _, hop in pairs(create_special_hops(config)) do
@@ -283,16 +297,7 @@ local attempt_hop = function(hops, config)
     if not fuzzy_hop then return end
     selected_hop = fuzzy_hop
   end
-  local _, dir_list_err = fs.read_dir(Url(selected_hop.path), { limit = 1, resolve = true })
-  if dir_list_err then
-    fail("Invalid directory " .. path_to_desc(selected_hop.path))
-    return
-  end
-  -- Assuming that if I can fs.read_dir, then this will also succeed
-  ya.mgr_emit("cd", { selected_hop.path })
-  if config.notify then
-    info('Hopped to ' .. selected_hop.desc)
-  end
+  cd(selected_hop, config)
 end
 
 local function init()
@@ -347,7 +352,7 @@ return {
       state.tabhist = tabhist
     end)
   end,
-  entry = function()
+  entry = function(self, job)
     if not get_state("init") then
       init()
     end
@@ -357,6 +362,13 @@ return {
       return
     end
     local hops, config = get_state("hops"), get_state("config")
-    attempt_hop(hops, config)
+    if job.args[1] == "fuzzy" then
+      local fuzzy_hop = select_fuzzy(hops, config)
+      if fuzzy_hop then
+        cd(fuzzy_hop, config)
+      end
+    else
+      attempt_hop(hops, config)
+    end
   end,
 }
