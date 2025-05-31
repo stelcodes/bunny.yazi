@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.1] - 2025-05-31
+
+### ⚙️ Miscellaneous Tasks
+
+- Update for breaking changes in yazi 25.5.28
+
 ## [1.3.0] - 2025-05-15
 
 ### 🚀 Features
