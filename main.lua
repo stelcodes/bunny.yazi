@@ -1,3 +1,4 @@
+--- @since 25.5.28
 local function debug(...)
   local function toReadableString(val)
     if type(val) == "table" then
@@ -250,7 +251,7 @@ local cd = function(selected_hop, config)
     return
   end
   -- Assuming that if I can fs.read_dir, then this will also succeed
-  ya.mgr_emit("cd", { selected_hop.path })
+  ya.emit("cd", { selected_hop.path })
   if config.notify then
     info('Hopped to ' .. selected_hop.desc)
   end
