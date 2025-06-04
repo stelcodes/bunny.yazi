@@ -287,7 +287,7 @@ local attempt_hop = function(hops, config)
     info("Press a key to create new hop")
     local char_idx = ya.which { cands = mark_cands, silent = true }
     if char_idx ~= nil then
-      local selected_char = string.upper(mark_cands[char_idx].on)
+      local selected_char = mark_cands[char_idx].on
       local cwd = get_cwd()
       table.insert(hops, { key = selected_char, path = cwd, desc = path_to_desc(cwd, config.desc_strategy) })
       set_state("hops", sort_hops(hops))
