@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2025-06-04
+
+### 🐛 Bug Fixes
+
+- Properly set defaults for ephemeral and tabs options
+- Stop mistakenly uppercasing ephermal hop characters
+
 ## [1.3.1] - 2025-05-31
 
 ### ⚙️ Miscellaneous Tasks
