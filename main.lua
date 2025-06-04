@@ -314,7 +314,9 @@ local function init()
   set_state("config", {
     desc_strategy = desc_strategy,
     fuzzy_cmd = options.fuzzy_cmd or "fzf",
-    notify = options.notify or false
+    notify = options.notify or false,
+    ephemeral = options.ephemeral or true,
+    tabs = options.tabs or true,
   })
   -- Set hops after ensuring they all have a description
   local hops = {}
