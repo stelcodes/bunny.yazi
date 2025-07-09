@@ -49,7 +49,7 @@ programs.yazi = {
   initLua = ''
     require("bunny"):setup({ ... })
   '';
-  keymap.manager.prepend_keymap = [
+  keymap.mgr.prepend_keymap = [
     { on = ";"; run = "plugin bunny"; desc = "Start bunny.yazi"; }
   ];
 };
@@ -83,13 +83,13 @@ require("bunny"):setup({
 
 `~/.config/yazi/yazi.toml`:
 ```toml
-[[manager.prepend_keymap]]
+[[mgr.prepend_keymap]]
 desc = "Start bunny.yazi"
 on = ";"
 run = "plugin bunny"
 
 # Optionally, add another keymap to immediately fuzzy search bookmarks
-[[manager.prepend_keymap]]
+[[mgr.prepend_keymap]]
 desc = "Start bunny.yazi fuzzy search"
 on = "'"
 run = "plugin bunny fuzzy"
