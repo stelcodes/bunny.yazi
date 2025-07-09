@@ -81,7 +81,7 @@ require("bunny"):setup({
 })
 ```
 
-`~/.config/yazi/yazi.toml`:
+`~/.config/yazi/keymap.toml`:
 ```toml
 [[mgr.prepend_keymap]]
 desc = "Start bunny.yazi"
