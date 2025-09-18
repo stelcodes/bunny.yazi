@@ -51,6 +51,14 @@ local get_tabs_as_paths = ya.sync(function(state)
   return result
 end)
 
+local some = function(...)
+  for _, v in ipairs({ ... }) do
+    if v ~= nil then
+      return v
+    end
+  end
+end
+
 local function filename(pathstr)
   if pathstr == "/" then return pathstr end
   local url_name = Url(pathstr):name()
@@ -313,10 +321,10 @@ local function init()
   local desc_strategy = options.desc_strategy or "path"
   set_state("config", {
     desc_strategy = desc_strategy,
-    fuzzy_cmd = options.fuzzy_cmd or "fzf",
-    notify = options.notify or false,
-    ephemeral = options.ephemeral or true,
-    tabs = options.tabs or true,
+    fuzzy_cmd = some(options.fuzzy_cmd, "fzf"),
+    notify = some(options.notify, false),
+    ephemeral = some(options.ephemeral, true),
+    tabs = some(options.tabs, true),
   })
   -- Set hops after ensuring they all have a description
   local hops = {}
