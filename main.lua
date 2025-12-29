@@ -205,7 +205,7 @@ end
 -- https://github.com/sxyazi/yazi/blob/main/yazi-plugin/src/process/child.rs
 -- Returns nil if fzf command failed or user exited with escape key
 local select_fuzzy = function(hops, config)
-  local permit = ya.hide()
+  local permit = ui.hide()
   local child, spawn_err =
       Command(config.fuzzy_cmd):stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
   if not child then
