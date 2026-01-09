@@ -1,7 +1,7 @@
 --- @since 25.12.29
 
---- @diagnostic disable-next-line:unused-function
-local debug = function(...)
+--- @diagnostic disable-next-line:unused-function,unused-local
+local function debug(...)
   --- @diagnostic disable-next-line:unused-function
   local function toReadableString(val)
     if type(val) == 'table' then
@@ -24,6 +24,7 @@ local debug = function(...)
   end
   ya.dbg('BUNNY.YAZI', table.unpack(processed_args))
 end
+
 local function fail(s, ...) ya.notify { title = 'bunny.yazi', content = string.format(s, ...), timeout = 4, level = 'error' } end
 local function info(s, ...) ya.notify { title = 'bunny.yazi', content = string.format(s, ...), timeout = 2, level = 'info' } end
 
@@ -211,13 +212,14 @@ end
 local select_fuzzy = function(hops, config)
   ---@diagnostic disable-next-line:undefined-field
   local permit = ui.hide()
+  -- child_err is basically a shell error in this case which is useful
   local child, child_err =
       Command(config.fuzzy_cmd):stdin(Command.PIPED):stdout(Command.PIPED):stderr(Command.INHERIT):spawn()
   if child_err then
     fail('Command `%s` failed with code %s. Do you have it installed?', config.fuzzy_cmd, child_err.code)
     return
-    -- Must nil check to make luals happy (poor Result type) >_>
   elseif not child then
+    -- Idk how this could ever be reached but I must nil check to make luals happy
     fail('Command failed')
     return
   end
@@ -242,16 +244,18 @@ local select_fuzzy = function(hops, config)
   child:write_all(table.concat(input_lines, '\n'))
   ---@diagnostic disable-next-line:undefined-field
   child:flush()
-  local output, output_err = child:wait_with_output()
+  -- Ignore the second return value (Error) because we can just check if
+  -- output is nil.
+  local output = child:wait_with_output()
   permit:drop()
-  if output_err then
-    if output_err.code ~= 130 then -- user pressed escape to quit
-      fail('Command `%s` failed with code %s', config.fuzzy_cmd, output_err.code)
-    end
-    return
-    -- Must nil check output to make luals happy (poor Result type) >_>
-  elseif not output then
+  if not output then
+    -- See comment above, not common and impossible to give helpful message
     fail('Failed to parse fuzzy searcher result')
+    return
+  elseif output and not output.status.success then
+    if output.status.code ~= 130 then -- user pressed escape to quit
+      fail('Command `%s` failed with code %s', config.fuzzy_cmd, output.status.code)
+    end
     return
   end
   -- Parse fzf output, remove right padded spaces from desc
