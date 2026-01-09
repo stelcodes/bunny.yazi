@@ -53,7 +53,7 @@ require("bunny"):setup({
     { key = { "l", "t" }, path = "~/.local/state", desc = "Local state" },
   },
   -- desc_strategy = "filename",
-  tabs = false,
+  tabs = true,
   ephemeral = false,
   notify = true, -- notify after hopping, default is false
   fuzzy_cmd = "fzf",
