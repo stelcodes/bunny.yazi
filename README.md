@@ -27,7 +27,7 @@ git clone https://github.com/stelcodes/bunny.yazi ~/.config/yazi/plugins/bunny.y
 ### With `yapack`
 
 ```sh
-ya pack -a stelcodes/bunny
+ya pkg add stelcodes/bunny
 ```
 
 ### With Nix (Home Manager + flakes)
