@@ -1,6 +1,13 @@
 #!/bin/bash
 #/* vim: set filetype=bash : */
 
+# The plugin is loaded from the repo itself. Create the link at runtime rather
+# than tracking it in git: a committed symlink pointing at a directory breaks
+# `ya pkg add`/`ya pkg upgrade` when Yazi materializes the package.
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+mkdir -p "$dir/plugins"
+ln -sfn ../.. "$dir/plugins/bunny.yazi"
+
 env "YAZI_CONFIG_HOME=$(pwd)" "YAZI_LOG=debug" yazi "$@"
 
 bat ~/.local/state/yazi/yazi.log || cat ~/.local/state/yazi/yazi.log
